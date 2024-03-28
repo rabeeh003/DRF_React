@@ -5,16 +5,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer
+from .serializers import UserSerializer, LoginSerializer, UserDetailSerializer
+from .models import UserDetail
 
 
 class CreateUserAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            print(serializer.validated_data)
             # Create the user
             user = User.objects.create_user(
                 username=serializer.validated_data["username"],
@@ -24,11 +26,21 @@ class CreateUserAPIView(generics.CreateAPIView):
                 last_name=serializer.validated_data.get("last_name", ""),
             )
             return Response(
-                {"message": "User created successfully"}, status=status.HTTP_201_CREATED
+                {"message": "User created successfully","id":user.id}, status=status.HTTP_201_CREATED
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserDetails(generics.CreateAPIView):
+    queryset = UserDetail.objects.all()
+    serializer_class = UserDetailSerializer
+
+    def post(self, request):
+        # request.data['user'] = User.objects.filter(id=request.data['user'])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"success":"don user details"})
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
@@ -47,22 +59,6 @@ class LoginView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
-
-
-class UpdateUserAPIView(generics.UpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UpdateUserSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
 
 class Home(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]

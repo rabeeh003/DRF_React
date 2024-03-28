@@ -12,6 +12,6 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('register/', CreateUserAPIView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
-    path('update/', UpdateUserAPIView.as_view(), name='update'),
     path('home/', Home.as_view(), name='home'),
+    path('register2/', UserDetails.as_view(), name='user_details'),
 ]

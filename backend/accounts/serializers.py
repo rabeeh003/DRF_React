@@ -1,12 +1,17 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-
+from .models import UserDetail
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'username', 'last_name', 'email', 'password']
+        fields = ['username', 'email', 'password', 'first_name', 'last_name']
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDetail
+        fields = ['user', 'dob', 'profile', 'phone']
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -24,23 +29,8 @@ class LoginSerializer(serializers.Serializer):
             else:
                 raise serializers.ValidationError('Unable to log in with provided credentials.')
         else:
-            raise serializers.ValidationError('Must include "email" and "password".')
+            raise serializers.ValidationError('Must include "username" and "password".')
         
         data['user'] = user
         return data
-    
-class UpdateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'email', 'password']
-
-    def update(self, instance, validated_data):
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.email = validated_data.get('email', instance.email)
-        password = validated_data.get('password')
-        if password:
-            instance.password = make_password(password)
-        instance.save()
-        return instance
     
